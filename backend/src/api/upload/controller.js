@@ -1,8 +1,10 @@
-// TODO: Create a controller for upload feature operations.
+import { uploadFileHandler } from './handlers/index.js';
+
+// Controller layer for upload requests.
 export const uploadController = {
   uploadFile: async (req, res, next) => {
     try {
-      res.status(200).json({ message: 'Upload controller placeholder' });
+      await uploadFileHandler(req, res, next);
     } catch (error) {
       next(error);
     }

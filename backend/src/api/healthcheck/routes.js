@@ -2,9 +2,13 @@ import { Router } from 'express';
 
 const router = Router();
 
-// TODO: Add a health-check endpoint for monitoring and uptime checks.
+// Health endpoint for monitoring and uptime checks.
 router.get('/', (req, res) => {
-  res.status(200).json({ status: 'ok', service: 'secure-library-backend' });
+  res.status(200).json({
+    status: 'ok',
+    service: 'secure-library-backend',
+    timestamp: new Date().toISOString(),
+  });
 });
 
 export default router;
