@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Users, BookOpen, Image as ImgIcon, Activity, Plus, Upload } from "lucide-react";
 import { useAuthors, useBooks, useImages } from "@/lib/mock-store";
+import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,11 +44,13 @@ function DashboardPage() {
   const [authors] = useAuthors();
   const [books] = useBooks();
   const [images] = useImages();
+  const { user } = useAuth();
+  const displayName = user?.username || user?.name || "there";
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Welcome back 👋</h1>
+        <h1 className="text-2xl font-semibold">Welcome back, {displayName} 👋</h1>
         <p className="text-sm text-muted-foreground">Here's what's happening in your library.</p>
       </div>
 

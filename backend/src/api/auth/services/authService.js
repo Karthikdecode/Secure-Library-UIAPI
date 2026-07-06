@@ -23,8 +23,8 @@ export const createUser = async (payload) => {
   }
 
   const result = await query(
-    'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, created_at',
-    [payload.name.trim(), normalizedEmail, passwordHash],
+    'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email, created_at',
+    [payload.username.trim(), normalizedEmail, passwordHash],
   );
 
   const user = result.rows[0];
@@ -32,7 +32,7 @@ export const createUser = async (payload) => {
 
   return {
     message: 'User registered successfully',
-    user: { id: user.id, name: user.name, email: user.email },
+    user: { id: user.id, username: user.username, email: user.email },
     accessToken,
     tokenType: 'Bearer',
   };
@@ -43,7 +43,7 @@ export const authenticateUser = async (payload) => {
 
   await connectDatabase();
 
-  const result = await query('SELECT id, name, email, password_hash FROM users WHERE email = $1', [normalizedEmail]);
+  const result = await query('SELECT id, username, email, password_hash FROM users WHERE email = $1', [normalizedEmail]);
   if (result.rows.length === 0) {
     const error = new Error('Invalid email or password.');
     error.statusCode = 401;
@@ -62,7 +62,7 @@ export const authenticateUser = async (payload) => {
 
   return {
     message: 'Login successful',
-    user: { id: user.id, name: user.name, email: user.email },
+    user: { id: user.id, username: user.username, email: user.email },
     accessToken,
     tokenType: 'Bearer',
   };

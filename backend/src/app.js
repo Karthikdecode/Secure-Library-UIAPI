@@ -1,28 +1,26 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import morgan from 'morgan';
 import registerRoutes from './api/registerRoutes.js';
-
-// Load environment variables from the .env file.
-dotenv.config();
+import { env } from './config/env.js';
+import { logger } from './config/logger.js';
 
 const app = express();
 
-// Middleware for enabling cross-origin requests in a controlled way.
-app.use(cors());
-
-// Middleware for parsing JSON request bodies.
+app.use(cors({ origin: env.frontendUrl, credentials: true }));
 app.use(express.json());
-
-// Middleware for parsing URL-encoded form submissions.
 app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 
-// Register all API feature routes.
 registerRoutes(app);
 
-// Health fallback route for verifying the API is alive.
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Secure Library API is running' });
+});
+
+app.use((err, req, res, next) => {
+  logger.error(err.message || 'Unhandled error');
+  res.status(err.statusCode || 500).json({ message: err.message || 'Internal server error' });
 });
 
 export default app;

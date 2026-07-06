@@ -1,11 +1,11 @@
-import dotenv from 'dotenv';
 import pg from 'pg';
-
-dotenv.config();
+import { env } from '../config/env.js';
+import { logger } from '../config/logger.js';
 
 const { Pool } = pg;
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: env.databaseUrl,
+  ssl: env.databaseUrl?.includes('sslmode=require') ? { rejectUnauthorized: false } : false,
 });
 
 let isInitialized = false;
@@ -16,7 +16,7 @@ export const connectDatabase = async () => {
     return pool;
   }
 
-  if (!process.env.DATABASE_URL) {
+  if (!env.databaseUrl) {
     throw new Error('DATABASE_URL is not configured.');
   }
 
@@ -29,6 +29,30 @@ export const connectDatabase = async () => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS authors (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      biography TEXT,
+      nationality VARCHAR(255),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS books (
+      id SERIAL PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      isbn VARCHAR(255),
+      author_id INTEGER REFERENCES authors(id) ON DELETE SET NULL,
+      publication_year INTEGER,
+      description TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  logger.info('PostgreSQL connection pool initialized successfully.');
 
   isInitialized = true;
   return pool;

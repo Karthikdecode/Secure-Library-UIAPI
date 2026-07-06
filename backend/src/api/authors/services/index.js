@@ -11,7 +11,7 @@ export const createAuthorService = async (payload) => {
   }
 
   const result = await query(
-    'INSERT INTO authors (name, biography, nationality) VALUES ($1, $2, $3) RETURNING id, name, biography, nationality, created_at',
+    'INSERT INTO authors (username, biography, nationality) VALUES ($1, $2, $3) RETURNING id, name, biography, nationality, created_at',
     [name.trim(), biography || null, nationality || null],
   );
 
@@ -19,12 +19,12 @@ export const createAuthorService = async (payload) => {
 };
 
 export const listAuthorsService = async () => {
-  const result = await query('SELECT id, name, biography, nationality, created_at FROM authors ORDER BY created_at DESC');
+  const result = await query('SELECT id, username, biography, nationality, created_at FROM authors ORDER BY created_at DESC');
   return result.rows;
 };
 
 export const getAuthorByIdService = async (id) => {
-  const result = await query('SELECT id, name, biography, nationality, created_at FROM authors WHERE id = $1', [id]);
+  const result = await query('SELECT id, username, biography, nationality, created_at FROM authors WHERE id = $1', [id]);
 
   if (result.rows.length === 0) {
     const error = new Error('Author not found.');

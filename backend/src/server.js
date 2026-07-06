@@ -1,8 +1,18 @@
 import app from './app.js';
+import { env } from './config/env.js';
+import { connectDatabase } from './lib/db.js';
+import { logger } from './config/logger.js';
 
-const PORT = process.env.PORT || 5000;
+const startServer = async () => {
+  try {
+    await connectDatabase();
+    app.listen(env.port, () => {
+      logger.info(`Secure Library API listening on port ${env.port}`);
+    });
+  } catch (error) {
+    logger.error(`Failed to start server: ${error.message}`);
+    process.exit(1);
+  }
+};
 
-// Start the HTTP server and listen on the configured port.
-app.listen(PORT, () => {
-  console.log(`Secure Library API listening on port ${PORT}`);
-});
+startServer();

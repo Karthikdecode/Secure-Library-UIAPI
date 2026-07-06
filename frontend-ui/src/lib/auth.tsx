@@ -2,10 +2,9 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 
 export type User = {
   id: string;
-  username: string;
+  username?: string;
+  name?: string;
   email: string;
-  role: string;
-  createdAt: string;
   token: string;
 };
 
@@ -18,11 +17,7 @@ type AuthCtx = {
 
 const Ctx = createContext<AuthCtx | null>(null);
 const KEY = "lms_user";
-
-function fakeJwt(email: string) {
-  const payload = btoa(JSON.stringify({ email, iat: Date.now() }));
-  return `demo.${payload}.sig`;
-}
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -35,23 +30,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    await new Promise((r) => setTimeout(r, 600));
-    if (!email || password.length < 4) throw new Error("Invalid credentials");
-    const u: User = {
-      id: "u_1",
-      username: email.split("@")[0] || "admin",
-      email,
-      role: "admin",
-      createdAt: new Date().toISOString(),
-      token: fakeJwt(email),
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Login failed");
+
+    const nextUser: User = {
+      id: data.user?.id?.toString() || "",
+      username: data.user?.username || data.user?.name || email.split("@")[0],
+      name: data.user?.name || data.user?.username || email.split("@")[0],
+      email: data.user?.email || email,
+      token: data.accessToken,
     };
-    localStorage.setItem(KEY, JSON.stringify(u));
-    setUser(u);
+
+    localStorage.setItem(KEY, JSON.stringify(nextUser));
+    setUser(nextUser);
   };
 
   const register = async (username: string, email: string, password: string) => {
-    await new Promise((r) => setTimeout(r, 600));
-    if (!username || !email || password.length < 6) throw new Error("Invalid input");
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, email, password }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Registration failed");
+
+    const nextUser: User = {
+      id: data.user?.id?.toString() || "",
+      username: data.user?.username || data.user?.name || username,
+      name: data.user?.name || data.user?.username || username,
+      email: data.user?.email || email,
+      token: data.accessToken,
+    };
+
+    localStorage.setItem(KEY, JSON.stringify(nextUser));
+    setUser(nextUser);
   };
 
   const logout = () => {

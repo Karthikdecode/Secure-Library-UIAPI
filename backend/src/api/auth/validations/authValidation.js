@@ -1,22 +1,22 @@
 // Validate incoming auth payloads before business logic is executed.
 export const validateRegisterInput = (payload) => {
   const errors = [];
-
+ 
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     return { valid: false, errors: ['Request body must be a JSON object.'] };
   }
 
-  const { name, email, password } = payload;
+  const { email, password ,username } = payload;
 
-  if (typeof name !== 'string' || name.trim().length < 2) {
-    errors.push('Name must be a string with at least 2 characters.');
-  }
+if (!username || typeof username !== "string" ) {
+  errors.push("Name must be a string with at least 2 characters.");
+}
 
-  if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.push('A valid email address is required.');
   }
 
-  if (typeof password !== 'string' || password.length < 8) {
+  if (!password || typeof password !== 'string' || password.length < 8) {
     errors.push('Password must be at least 8 characters long.');
   }
 
