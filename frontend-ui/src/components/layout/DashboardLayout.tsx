@@ -20,7 +20,7 @@ const nav = [
   { to: "/dashboard", label: "Dashboard", icon: Icons.LayoutDashboard },
   { to: "/authors", label: "Authors", icon: Icons.Users },
   { to: "/books", label: "Books", icon: Icons.BookOpen },
-  { to: "/upload", label: "Upload Image", icon: Icons.Upload },
+  // The /upload route was removed in a previous step, which is correct.
   { to: "/profile", label: "Profile", icon: Icons.User },
 ] as const;
 
@@ -107,9 +107,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Main */}
         <main className="min-h-[calc(100vh-3.5rem)] flex-1 p-4 md:p-6">
           <div className="mx-auto max-w-6xl">{children}</div>
-          <footer className="mx-auto mt-8 max-w-6xl border-t pt-4 text-center text-xs text-muted-foreground">
-            SecureLib Admin © {new Date().getFullYear()}
-          </footer>
+         <footer className="fixed bottom-0 left-0 w-full border-t bg-background py-4 text-center text-xs text-muted-foreground">
+ SecureLib Admin © 2026 | All rights reserved
+</footer>
         </main>
       </div>
 

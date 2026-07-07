@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Pencil, Trash2, Eye, Plus, Search } from "lucide-react";
+import { useMemo, useState, useRef, type DragEvent } from "react";
+import { Pencil, Trash2, Eye, Plus, Search, Upload, Image as ImageIcon, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthors, useBooks, uid, type Book } from "@/lib/mock-store";
 import { Button } from "@/components/ui/button";
@@ -45,18 +45,40 @@ export const Route = createFileRoute("/_authenticated/books")({
   component: BooksPage,
 });
 
+// Extended Book type to include cover image
+type BookWithCover = Book & { coverUrls?: string[] };
+
 const PAGE = 5;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+}
 
 function BooksPage() {
   const [authors] = useAuthors();
-  const [books, setBooks] = useBooks();
+  const [books, setBooks] = useBooks() as [BookWithCover[], (books: BookWithCover[]) => void];
   const [q, setQ] = useState("");
   const [authorFilter, setAuthorFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
-  const [modal, setModal] = useState<{ open: boolean; edit?: Book; view?: Book }>({ open: false });
-  const [del, setDel] = useState<Book | null>(null);
-  const [form, setForm] = useState({ title: "", description: "", authorId: "", price: "" });
+  const [modal, setModal] = useState<{ open: boolean; edit?: BookWithCover; view?: BookWithCover }>({
+    open: false,
+  });
+  const [del, setDel] = useState<BookWithCover | null>(null);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    authorId: "",
+    price: "",
+    coverUrls: [] as string[],
+  });
   const [err, setErr] = useState<Record<string, string>>({});
+  const [drag, setDrag] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const authorName = (id: string) => authors.find((a) => a.id === id)?.name || "—";
 
@@ -73,15 +95,26 @@ function BooksPage() {
   const pageData = filtered.slice((page - 1) * PAGE, page * PAGE);
 
   const openAdd = () => {
-    setForm({ title: "", description: "", authorId: "", price: "" });
+    setForm({ title: "", description: "", authorId: "", price: "", coverUrls: [] });
     setErr({});
     setModal({ open: true });
   };
-  const openEdit = (b: Book) => {
-    setForm({ title: b.title, description: b.description, authorId: b.authorId, price: String(b.price) });
+  const openEdit = (b: BookWithCover) => {
+    setForm({
+      title: b.title,
+      description: b.description,
+      authorId: b.authorId,
+      price: String(b.price),
+      coverUrls: b.coverUrls || [],
+    });
     setErr({});
     setModal({ open: true, edit: b });
   };
+  const openView = (b: BookWithCover) => {
+    setCurrentImageIndex(0);
+    setModal({ open: true, view: b });
+  };
+
   const save = () => {
     const errs: Record<string, string> = {};
     if (!form.title.trim()) errs.title = "Title required";
@@ -95,7 +128,7 @@ function BooksPage() {
       toast.success("Book updated");
     } else {
       setBooks([
-        { id: uid(), ...form, price: p, createdAt: new Date().toISOString().slice(0, 10) },
+        { id: uid(), ...form, price: p, createdAt: new Date().toISOString().slice(0, 10) } as BookWithCover,
         ...books,
       ]);
       toast.success("Book created");
@@ -107,6 +140,40 @@ function BooksPage() {
     setBooks(books.filter((b) => b.id !== del.id));
     toast.success("Book deleted");
     setDel(null);
+  };
+
+  const handleFilePick = (files: FileList | null) => {
+    if (!files) return;
+
+    const newUrls: string[] = [];
+    const fileReaders: FileReader[] = [];
+
+    Array.from(files).forEach(file => {
+      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+        toast.error(`Unsupported format for ${file.name}`);
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`${file.name} exceeds 5 MB`);
+        return;
+      }
+
+      const reader = new FileReader();
+      fileReaders.push(reader);
+      reader.onload = () => {
+        newUrls.push(reader.result as string);
+        if (newUrls.length === fileReaders.length) {
+          setForm(prevForm => ({ ...prevForm, coverUrls: [...prevForm.coverUrls, ...newUrls] }));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const onDrop = (e: DragEvent) => {
+    e.preventDefault();
+    setDrag(false);
+    handleFilePick(e.dataTransfer.files);
   };
 
   return (
@@ -151,6 +218,7 @@ function BooksPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-20">Cover</TableHead>
                   <TableHead>Title</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Author</TableHead>
@@ -162,6 +230,13 @@ function BooksPage() {
               <TableBody>
                 {pageData.map((b) => (
                   <TableRow key={b.id}>
+                    <TableCell>
+                      {b.coverUrls && b.coverUrls.length > 0 ? (
+                        <img src={b.coverUrls[0]} alt={b.title} className="h-12 w-12 rounded object-cover" />
+                      ) : (
+                        <div className="flex h-12 w-12 items-center justify-center rounded bg-muted text-muted-foreground"><ImageIcon size={20} /></div>
+                      )}
+                    </TableCell>
                     <TableCell className="font-medium">{b.title}</TableCell>
                     <TableCell className="max-w-xs truncate text-muted-foreground">{b.description}</TableCell>
                     <TableCell>{authorName(b.authorId)}</TableCell>
@@ -169,7 +244,7 @@ function BooksPage() {
                     <TableCell className="text-muted-foreground">{b.createdAt}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => setModal({ open: true, view: b })}>
+                        <Button size="icon" variant="ghost" onClick={() => openView(b)}>
                           <Eye size={14} />
                         </Button>
                         <Button size="icon" variant="ghost" onClick={() => openEdit(b)}>
@@ -184,7 +259,7 @@ function BooksPage() {
                 ))}
                 {pageData.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                       No books found
                     </TableCell>
                   </TableRow>
@@ -218,6 +293,24 @@ function BooksPage() {
           </DialogHeader>
           {modal.view ? (
             <div className="space-y-2 text-sm">
+              {modal.view.coverUrls && modal.view.coverUrls.length > 0 && (
+                <div className="relative mb-2">
+                  <img src={modal.view.coverUrls[currentImageIndex]} alt={`${modal.view.title} - ${currentImageIndex + 1}`} className="h-48 w-full rounded-md object-cover" />
+                  {modal.view.coverUrls.length > 1 && (
+                    <>
+                      <Button size="icon" variant="secondary" className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full" onClick={() => setCurrentImageIndex(p => (p - 1 + modal.view.coverUrls!.length) % modal.view.coverUrls!.length)}>
+                        <ChevronLeft size={16} />
+                      </Button>
+                      <Button size="icon" variant="secondary" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full" onClick={() => setCurrentImageIndex(p => (p + 1) % modal.view.coverUrls!.length)}>
+                        <ChevronRight size={16} />
+                      </Button>
+                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-2 py-1 text-xs text-white">
+                        {currentImageIndex + 1} / {modal.view.coverUrls.length}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
               <p><span className="font-medium">Title:</span> {modal.view.title}</p>
               <p><span className="font-medium">Author:</span> {authorName(modal.view.authorId)}</p>
               <p><span className="font-medium">Price:</span> ${modal.view.price.toFixed(2)}</p>
@@ -226,6 +319,43 @@ function BooksPage() {
             </div>
           ) : (
             <div className="space-y-3">
+              <div className="space-y-1">
+                <Label>Cover Image</Label>
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+                  onDragLeave={() => setDrag(false)}
+                  onDrop={onDrop}
+                  onClick={() => inputRef.current?.click()}
+                  className={`relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 text-center transition-colors ${drag ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}
+                >
+                  <Upload className="text-muted-foreground" />
+                  <p className="text-sm">Drag & drop or click to browse</p>
+                  <p className="text-xs text-muted-foreground">JPG, PNG, WEBP · up to 5 MB</p>
+                  <input
+                    ref={inputRef}
+                    type="file"
+                    multiple
+                    accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                    className="hidden"
+                    onChange={(e) => handleFilePick(e.target.files)}
+                  />
+                </div>
+                {form.coverUrls.length > 0 && (
+                  <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    {form.coverUrls.map((url, i) => (
+                      <div key={i} className="relative">
+                        <img src={url} alt={`Preview ${i + 1}`} className="h-20 w-20 rounded-md object-cover" />
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          className="absolute -right-1 -top-1 h-5 w-5 rounded-full"
+                          onClick={() => setForm(f => ({ ...f, coverUrls: f.coverUrls.filter((_, idx) => idx !== i) }))}
+                        ><X size={12} /></Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="space-y-1">
                 <Label htmlFor="bt">Title</Label>
                 <Input id="bt" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />

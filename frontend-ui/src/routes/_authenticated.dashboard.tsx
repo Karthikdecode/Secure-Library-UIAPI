@@ -17,12 +17,12 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
-const activity = [
-  { time: "Just now", event: "User logged in" },
-  { time: "2 min ago", event: "Author created: Isaac Asimov" },
-  { time: "10 min ago", event: "Book updated: The Hobbit" },
-  { time: "1 hr ago", event: "Image uploaded: cover-01.png" },
-];
+// const activity = [
+//   { time: "Just now", event: "User logged in" },
+//   { time: "2 min ago", event: "Author created: Isaac Asimov" },
+//   { time: "10 min ago", event: "Book updated: The Hobbit" },
+//   { time: "1 hr ago", event: "Image uploaded: cover-01.png" },
+// ];
 
 function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: string | number }) {
   return (
@@ -76,15 +76,10 @@ function DashboardPage() {
               <Plus size={14} /> Add Book
             </Link>
           </Button>
-          <Button asChild variant="outline">
-            <Link to="/upload">
-              <Upload size={14} /> Upload Image
-            </Link>
-          </Button>
         </CardContent>
       </Card>
 
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="text-base">Recent Activity</CardTitle>
         </CardHeader>
@@ -106,7 +101,7 @@ function DashboardPage() {
             </TableBody>
           </Table>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }
