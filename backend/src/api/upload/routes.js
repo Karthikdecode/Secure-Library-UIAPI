@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { uploadController } from './controller.js';
 import { upload } from '../../middleware/upload.js';
-import { protect } from '../../middleware/auth.js';
+import { authenticate } from '../../middleware/authenticate.js';
 
 const router = Router();
 
-// Upload endpoint remains the same contract while using multer and sharp internally.
-router.post('/', protect, upload.single('image'), uploadController.uploadFile);
+// Upload endpoints for authenticated users.
+router.post('/', authenticate, upload.single('image'), uploadController.uploadFile);
+router.get('/', authenticate, uploadController.listFiles);
 
 export default router;

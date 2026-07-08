@@ -5,7 +5,11 @@ import { connectDatabase, query } from '../../../lib/db.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 
 const createToken = (user) => {
-  return jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+  return jwt.sign(
+    { sub: user.id, email: user.email, role: user.role || 'user' },
+    JWT_SECRET,
+    { expiresIn: '1h' },
+  );
 };
 
 // Service layer for registration and authentication business logic.
@@ -23,7 +27,7 @@ export const createUser = async (payload) => {
   }
 
   const result = await query(
-    'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email, created_at',
+    'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email, role, created_at',
     [payload.username.trim(), normalizedEmail, passwordHash],
   );
 
@@ -32,7 +36,7 @@ export const createUser = async (payload) => {
 
   return {
     message: 'User registered successfully',
-    user: { id: user.id, username: user.username, email: user.email },
+    user: { id: user.id, username: user.username, email: user.email, role: user.role },
     accessToken,
     tokenType: 'Bearer',
   };
@@ -43,7 +47,10 @@ export const authenticateUser = async (payload) => {
 
   await connectDatabase();
 
-  const result = await query('SELECT id, username, email, password_hash FROM users WHERE email = $1', [normalizedEmail]);
+  const result = await query(
+    'SELECT id, username, email, role, password_hash FROM users WHERE email = $1',
+    [normalizedEmail],
+  );
   if (result.rows.length === 0) {
     const error = new Error('Invalid email or password.');
     error.statusCode = 401;
@@ -62,7 +69,7 @@ export const authenticateUser = async (payload) => {
 
   return {
     message: 'Login successful',
-    user: { id: user.id, username: user.username, email: user.email },
+    user: { id: user.id, username: user.username, email: user.email, role: user.role },
     accessToken,
     tokenType: 'Bearer',
   };

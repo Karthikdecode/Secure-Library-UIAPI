@@ -1,3 +1,4 @@
+// src/api/authors/handlers/index.js
 import {
   createAuthorService,
   listAuthorsService,
@@ -6,53 +7,47 @@ import {
   deleteAuthorService,
 } from '../services/index.js';
 
-// Handler layer for authors CRUD operations.
-export const createAuthorHandler = async (req, res, next) => {
+export const createAuthorHandler = async (req, res) => {
   try {
-    const author = await createAuthorService(req.body);
+    const author = await createAuthorService(req.body, req.user?.id);
     return res.status(201).json(author);
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-    return res.status(statusCode).json({ message: error.message || 'Failed to create author' });
+    return res.status(error.statusCode || 500).json({ message: error.message || 'Failed to create author' });
   }
 };
 
-export const listAuthorsHandler = async (req, res, next) => {
+export const listAuthorsHandler = async (req, res) => {
   try {
     const authors = await listAuthorsService();
     return res.status(200).json(authors);
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-    return res.status(statusCode).json({ message: error.message || 'Failed to fetch authors' });
+    return res.status(error.statusCode || 500).json({ message: error.message || 'Failed to fetch authors' });
   }
 };
 
-export const getAuthorByIdHandler = async (req, res, next) => {
+export const getAuthorByIdHandler = async (req, res) => {
   try {
     const author = await getAuthorByIdService(req.params.id);
     return res.status(200).json(author);
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-    return res.status(statusCode).json({ message: error.message || 'Failed to fetch author' });
+    return res.status(error.statusCode || 500).json({ message: error.message || 'Failed to fetch author' });
   }
 };
 
-export const updateAuthorHandler = async (req, res, next) => {
+export const updateAuthorHandler = async (req, res) => {
   try {
     const author = await updateAuthorService(req.params.id, req.body);
     return res.status(200).json(author);
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-    return res.status(statusCode).json({ message: error.message || 'Failed to update author' });
+    return res.status(error.statusCode || 500).json({ message: error.message || 'Failed to update author' });
   }
 };
 
-export const deleteAuthorHandler = async (req, res, next) => {
+export const deleteAuthorHandler = async (req, res) => {
   try {
     const result = await deleteAuthorService(req.params.id);
     return res.status(200).json(result);
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-    return res.status(statusCode).json({ message: error.message || 'Failed to delete author' });
+    return res.status(error.statusCode || 500).json({ message: error.message || 'Failed to delete author' });
   }
 };

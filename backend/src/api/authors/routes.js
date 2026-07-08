@@ -6,17 +6,14 @@ import {
   updateAuthor,
   deleteAuthor,
 } from './controller.js';
-import { protect } from '../../middleware/auth.js';
+import { authenticate } from '../../middleware/authenticate.js';
 
 const router = Router();
 
-// Protect all authors endpoints with JWT authentication.
-router.use(protect);
-
 router.get('/', listAuthors);
-router.post('/', createAuthor);
 router.get('/:id', getAuthorById);
-router.put('/:id', updateAuthor);
-router.delete('/:id', deleteAuthor);
+router.post('/', authenticate, createAuthor);
+router.put('/:id', authenticate, updateAuthor);
+router.delete('/:id', authenticate, deleteAuthor);
 
 export default router;

@@ -1,10 +1,9 @@
 import { Router } from 'express';
+import { authenticate } from '../../middleware/authenticate.js';
+import { profileController } from './controller.js';
 
 const router = Router();
 
-// TODO: Define profile-related endpoints.
-router.get('/', (req, res) => {
-  res.json({ message: 'Profile route placeholder' });
-});
+router.get('/', authenticate, profileController.getProfile);
 
 export default router;

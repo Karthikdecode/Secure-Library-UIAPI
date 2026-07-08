@@ -1,7 +1,0 @@
-const env = process.env.NODE_ENV || 'development';
-export {
-  env
-};
-
-export const TOKEN_KEY =
-  'eyJ0eXAiOiJhdCtqd3QiLCJhbGciOiJFUzI1NiIsImtpZCI6IjA2YzQzNTg0NmU4ZTI4NGI3YTIxMWM3NWRhY2UyYWQxIn0.eyJpc3MiOiJodHRwczovL2lkcC5sb2NhbCIsImF1ZCI6ImFwaTEiLCJzdWIiOiI1YmU4NjM1OTA3M2M0MzRiYWQyZGEzOTMyMjIyZGFiZSIsImNsaWVudF9pZCI6InNrZXdiX25vdnVzIiwiZXhwIjoxNjc4MjczODA1LCJpYXQiOjE2NzgyNzAyMDUsImp0aSI6ImI5ZDZhNzIxNDU2NDcyZDFkMTdhODEwMjBlZjcyNWJiIn0.ylFV4aot8UyXaHJlzcXquwe9kl6jFOUmicaZMpiJheIRVW3MYflHP-rbW6wcFcmAjzpc3fgPOetS_R79FLoOMw';

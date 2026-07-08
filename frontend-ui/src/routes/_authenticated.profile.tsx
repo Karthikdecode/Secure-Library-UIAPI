@@ -53,7 +53,7 @@ function ProfilePage() {
         <CardContent>
           <Row label="Username" value={user.username} />
           <Row label="Email" value={user.email} />
-          <Row label="Role" value={<Badge>{user.role}</Badge>} />
+          {/* <Row label="Role" value={<Badge>{user.role}</Badge>} /> */}
           <Row label="Account Created" value={new Date(user.createdAt).toLocaleString()} />
           <Row
             label="JWT Status"
@@ -63,10 +63,7 @@ function ProfilePage() {
               </span>
             }
           />
-          <Row
-            label="Token"
-            value={<code className="max-w-[220px] truncate rounded bg-muted px-2 py-0.5 text-xs">{user.token}</code>}
-          />
+         
           <div className="mt-4">
             <Button variant="destructive" onClick={() => setConfirm(true)}>
               <LogOut size={14} /> Logout
